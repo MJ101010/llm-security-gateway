@@ -1,0 +1,30 @@
+<!-- Copy to /var/ossec/etc/rules/llm_gateway_rules.xml on the Wazuh manager, then restart wazuh-manager.
+     Also add to the agent's ossec.conf:
+     <localfile><log_format>json</log_format><location>/path/to/llm-security-gateway/logs/security_events.jsonl</location></localfile>
+-->
+<group name="llm_gateway,">
+  <rule id="100100" level="3">
+    <decoded_as>json</decoded_as>
+    <field name="event_type">llm_gateway</field>
+    <description>LLM gateway event</description>
+  </rule>
+
+  <rule id="100101" level="10">
+    <if_sid>100100</if_sid>
+    <field name="action">block</field>
+    <description>LLM gateway: prompt injection attempt blocked</description>
+    <mitre><id>T1190</id></mitre>
+  </rule>
+
+  <rule id="100102" level="7">
+    <if_sid>100100</if_sid>
+    <field name="action">redact</field>
+    <description>LLM gateway: sensitive data (secrets/PII) sent to LLM and redacted</description>
+  </rule>
+
+  <rule id="100103" level="12" frequency="5" timeframe="120">
+    <if_matched_sid>100101</if_matched_sid>
+    <same_field>client</same_field>
+    <description>LLM gateway: repeated prompt injection attempts from same client</description>
+  </rule>
+</group>
